@@ -1,7 +1,12 @@
 #include <stdio.h>
 
-int main() {
+typedef struct Stack
+{
+	Stack * node;
+} Stack;
 
+int main() {
+	
 	printf("Hello World!\n");
 
 	return 0;
