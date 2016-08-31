@@ -20,15 +20,12 @@ int main(int argc, const char * argv[]) {
 	
 	char * fileIn;
 	FILE * ifp;
-	FILE * ofp;
 
 	ifp = fopen(argv[1], "r");
-	ofp = fopen(argv[2], "r");
 
 	printf("Hello World!\n");
 
 	fclose(ifp);
-	fclose(ofp);
 
 	return 0;
 }
