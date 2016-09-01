@@ -50,12 +50,10 @@ void readFile(const char * fileName) {
 	}
 
 	while(fscanf(ifp, "%d", &data) != EOF) {
-		//printf("%d ", data);
 
 		comp[i++ % 3] = data;
 
 		if (i % 3 == 0 && i != 0) {
-			//printf("\n");
 			pushCode(comp);
 		}
 	}
@@ -95,7 +93,6 @@ void printCode() {
 	printf("PL/0 code:\n\n");
 
 	while (current != NULL) {
-		//printf("%d %d %d\n", current -> op, current -> lvl, current -> mod);
 		printf(" %2d  %3s    %d    %2d\n", i++, getOp(current -> op), current -> lvl, current -> mod);
 		current = current -> next;
 	}
