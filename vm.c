@@ -2,26 +2,27 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_STACK_SIZE 2000
+#define MAX_STACK_HEIGHT 2000
+#define MAX_CODE_LENGTH 500
+#define MAX_LEXI_LEVELS 3
 
-typedef struct code
+typedef struct instruction
 {
 	int op;
-	int lvl;
-	int mod;
-	struct code * next;
-} code;
+	int l;
+	int m;
+} instruction;
 
 void readFile(const char * fileName);
-void pushCode(int comp[]);
+//void pushCode(int comp[]);
 void printCode();
 char * getOp(int op);
-void runProgram();
-void executeLine();
+void fetchCycle();
+void executeCycle();
 
-code * codeStack;
-int stack[MAX_STACK_SIZE];
-int pc, bp, sp, halt;
+instruction code[MAX_CODE_LENGTH];
+int stack[MAX_STACK_HEIGHT];
+int pc, bp, sp, ir;
 
 int main(int argc, const char * argv[]) {
 	
@@ -31,7 +32,7 @@ int main(int argc, const char * argv[]) {
 
 	printCode();
 
-	runProgram();
+	fetchCycle();
 
 	return 0;
 }
@@ -39,8 +40,7 @@ int main(int argc, const char * argv[]) {
 void readFile(const char * fileName) {
 
 	FILE * ifp;
-	int i = 0, data;
-	int comp[3];
+	pc = 0;
 
 	ifp = fopen(fileName, "r");
 
@@ -49,13 +49,9 @@ void readFile(const char * fileName) {
 		exit(0);
 	}
 
-	while(fscanf(ifp, "%d", &data) != EOF) {
+	while(fscanf(ifp, "%d %d %d", &code[pc].op, &code[pc].l, &code[pc].m) != EOF) {
 
-		comp[i++ % 3] = data;
-
-		if (i % 3 == 0 && i != 0) {
-			pushCode(comp);
-		}
+		pc++;
 	}
 
 	fclose(ifp);
@@ -63,38 +59,14 @@ void readFile(const char * fileName) {
 	return;
 }
 
-void pushCode(int comp[]) {
-
-	code * node = (code *) malloc(sizeof(code));
-	code * last = codeStack;
-
-	node -> op = comp[0];
-	node -> lvl = comp[1];
-	node -> mod = comp[2];
-	node -> next = NULL;
-
-	if (codeStack == NULL) {
-		codeStack = node;
-	} else {
-		while (last -> next != NULL)
-			last = last -> next;
-
-		last -> next = node;
-	}
-
-	return;
-}
-
 void printCode() {
 
-	code * current = codeStack;
-	int i = 0;
+	int i;
 
 	printf("PL/0 code:\n\n");
 
-	while (current != NULL) {
-		printf(" %2d  %3s    %d    %2d\n", i++, getOp(current -> op), current -> lvl, current -> mod);
-		current = current -> next;
+	for (i = 0; i < pc; i++) {
+		printf(" %2d  %3s    %d    %2d\n", i, getOp(code[i].op), code[i].l, code[i].m);
 	}
 
 	return;
@@ -137,18 +109,19 @@ char * getOp(int op) {
 	return opCode;
 }
 
-void runProgram() {
+void fetchCycle() {
 
 	pc = 0;
-	bp = 0;
+	bp = 1;
 	sp = 0;
-	halt = 0;
+	ir = 0;
 
 	printf("\nExecution:\n");
 	printf("                       pc   bp   sp   stack\n");
+	printf("                        %d    %d    %d\n", pc, bp, sp);
 
-	while (halt == 0 && pc < MAX_STACK_SIZE) {
-		executeLine();
+	while (pc < MAX_STACK_HEIGHT) {
+		executeCycle();
 
 		pc++;
 	}
@@ -156,7 +129,7 @@ void runProgram() {
 	return;
 }
 
-void executeLine() {
+void executeCycle() {
 
 
 
