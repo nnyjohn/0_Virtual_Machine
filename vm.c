@@ -13,34 +13,35 @@ typedef struct instruction
 	int m;
 } instruction;
 
-void readFile(const char * fileName);
-//void pushCode(int comp[]);
-void printCode();
-char * getOp(int op);
-void fetchCycle();
-void executeCycle();
-
-instruction code[MAX_CODE_LENGTH];
-int stack[MAX_STACK_HEIGHT];
-int pc, bp, sp, ir;
+void readFile(const char * fileName, instruction code[]);
+void printCode(int size, instruction code[]);
+char * getOp(int op, int m);
+void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir);
+void executeCycle(instruction ir);
 
 int main(int argc, const char * argv[]) {
 	
 	const char * fileName = argv[1];
+	instruction code[MAX_CODE_LENGTH];
+	int stack[MAX_STACK_HEIGHT];
+	int * pc, * bp, * sp, * ir;
 
-	readFile(fileName);
+	pc = (int *) malloc(sizeof(int));
+	bp = (int *) malloc(sizeof(int));
+	sp = (int *) malloc(sizeof(int));
+	ir = (int *) malloc(sizeof(int));
 
-	printCode();
+	readFile(fileName, code);
 
-	fetchCycle();
+	fetchCycle(code, stack, pc, bp, sp, ir);
 
 	return 0;
 }
 
-void readFile(const char * fileName) {
+void readFile(const char * fileName, instruction code[]) {
 
 	FILE * ifp;
-	pc = 0;
+	int i = 0;
 
 	ifp = fopen(fileName, "r");
 
@@ -49,24 +50,26 @@ void readFile(const char * fileName) {
 		exit(0);
 	}
 
-	while(fscanf(ifp, "%d %d %d", &code[pc].op, &code[pc].l, &code[pc].m) != EOF) {
+	while(fscanf(ifp, "%d %d %d", &code[i].op, &code[i].l, &code[i].m) != EOF) {
 
-		pc++;
+		i++;
 	}
 
 	fclose(ifp);
 
+	printCode(i, code);
+
 	return;
 }
 
-void printCode() {
+void printCode(int size, instruction code[]) {
 
 	int i;
 
 	printf("PL/0 code:\n\n");
 
-	for (i = 0; i < pc; i++) {
-		printf(" %2d  %3s    %d    %2d\n", i, getOp(code[i].op), code[i].l, code[i].m);
+	for (i = 0; i < size; i++) {
+		printf(" %2d  %3s    %d    %2d\n", i, getOp(code[i].op, code[i].m), code[i].l, code[i].m);
 	}
 
 	return;
@@ -75,7 +78,7 @@ void printCode() {
 /*
  * Finish adding op codes
  */
-char * getOp(int op) {
+char * getOp(int op, int m) {
 
 	char * opCode = (char *) malloc(sizeof(char) * 3);
 
@@ -85,6 +88,9 @@ char * getOp(int op) {
 			break;
 		case 2:
 			strcpy(opCode, "RET");
+			break;
+		case 3:
+			strcpy(opCode, "LOD");
 			break;
 		case 4:
 			strcpy(opCode, "STO");
@@ -98,8 +104,24 @@ char * getOp(int op) {
 		case 7:
 			strcpy(opCode, "JMP");
 			break;
+		case 8:
+			strcpy(opCode, "JPC");
+			break;
 		case 9:
-			strcpy(opCode, "HLT");
+			switch(m) {
+				case 0:
+					strcpy(opCode, "OUT");
+					break;
+				case 1:
+					strcpy(opCode, "INP");
+					break;
+				case 2:
+					strcpy(opCode, "HLT");
+					break;
+				default:
+					strcpy(opCode, "ER");
+					break;
+			}
 			break;
 		default:
 			strcpy(opCode, "ER");
@@ -109,27 +131,28 @@ char * getOp(int op) {
 	return opCode;
 }
 
-void fetchCycle() {
+void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir) {
 
-	pc = 0;
-	bp = 1;
-	sp = 0;
-	ir = 0;
+	*pc = 0;
+	*bp = 1;
+	*sp = 0;
+	*ir = 0;
 
 	printf("\nExecution:\n");
 	printf("                       pc   bp   sp   stack\n");
-	printf("                        %d    %d    %d\n", pc, bp, sp);
+	printf("                        %d    %d    %d\n", *pc, *bp, *sp);
 
-	while (pc < MAX_STACK_HEIGHT) {
-		executeCycle();
-
-		pc++;
+	while (*pc < MAX_CODE_LENGTH) {
+		*ir = *pc;
+		(*pc)++;
+		
+		executeCycle(code[*ir]);
 	}
 
 	return;
 }
 
-void executeCycle() {
+void executeCycle(instruction ir) {
 
 
 
