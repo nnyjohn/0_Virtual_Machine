@@ -15,7 +15,7 @@ typedef struct instruction
 
 void readFile(const char * fileName, instruction code[]);
 void printCode(int size, instruction code[]);
-char * getOp(int op, int m);
+int getOp(int op, int m, char * opCode);
 void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir);
 void executeCycle(instruction ir);
 
@@ -65,38 +65,87 @@ void readFile(const char * fileName, instruction code[]) {
 void printCode(int size, instruction code[]) {
 
 	int i;
+	char * opCode = (char *) malloc(sizeof(char) * 3);
 
 	printf("PL/0 code:\n\n");
 
-	for (i = 0; i < size; i++) {
-		printf(" %2d  %3s    %d    %2d\n", i, getOp(code[i].op, code[i].m), code[i].l, code[i].m);
-	}
+	for (i = 0; i < size; i++)
+		if (getOp(code[i].op, code[i].m, opCode))
+			printf(" %2d  %3s    %d    %2d\n", i, opCode, code[i].l, code[i].m);
+		else
+			printf(" %2d  %3s         %2d\n", i, opCode, code[i].m);
 
 	return;
 }
 
-/*
- * Finish adding op codes
- */
-char * getOp(int op, int m) {
+int getOp(int op, int m, char * opCode) {
 
-	char * opCode = (char *) malloc(sizeof(char) * 3);
+	int printL = 0;
 
 	switch(op) {
 		case 1:
 			strcpy(opCode, "LIT");
 			break;
 		case 2:
-			strcpy(opCode, "RET");
+			switch(m) {
+				case 0:
+					strcpy(opCode, "RET");
+					break;
+				case 1:
+					strcpy(opCode, "NEG");
+					break;
+				case 2:
+					strcpy(opCode, "ADD");
+					break;
+				case 3:
+					strcpy(opCode, "SUB");
+					break;
+				case 4:
+					strcpy(opCode, "MUL");
+					break;
+				case 5:
+					strcpy(opCode, "DIV");
+					break;
+				case 6:
+					strcpy(opCode, "ODD");
+					break;
+				case 7:
+					strcpy(opCode, "MOD");
+					break;
+				case 8:
+					strcpy(opCode, "EQL");
+					break;
+				case 9:
+					strcpy(opCode, "NEQ");
+					break;
+				case 10:
+					strcpy(opCode, "LSS");
+					break;
+				case 11:
+					strcpy(opCode, "LEQ");
+					break;
+				case 12:
+					strcpy(opCode, "GTR");
+					break;
+				case 13:
+					strcpy(opCode, "GEQ");
+					break;
+				default:
+					strcpy(opCode, "ER");
+					break;
+			}
 			break;
 		case 3:
 			strcpy(opCode, "LOD");
+			printL = 1;
 			break;
 		case 4:
 			strcpy(opCode, "STO");
+			printL = 1;
 			break;
 		case 5:
 			strcpy(opCode, "CAL");
+			printL = 1;
 			break;
 		case 6:
 			strcpy(opCode, "INC");
@@ -128,7 +177,7 @@ char * getOp(int op, int m) {
 			break;
 	}
 
-	return opCode;
+	return printL;
 }
 
 void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir) {
