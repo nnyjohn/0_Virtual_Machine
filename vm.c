@@ -13,11 +13,16 @@ typedef struct instruction
 	int m;
 } instruction;
 
+void initStack(int stack[]);
 void readFile(const char * fileName, instruction code[]);
 void printCode(int size, instruction code[]);
-int getOp(int op, int m, char * opCode);
+void printLine(instruction ir, int i);
+void getOp(int op, int m, int * printL, int * printM, char * opCode);
 void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir);
-void executeCycle(instruction ir);
+void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]);
+void printStack(int stack[], int sp, int bp);
+void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt);
+int base(int level, int b, int stack[]);
 
 int main(int argc, const char * argv[]) {
 	
@@ -25,6 +30,8 @@ int main(int argc, const char * argv[]) {
 	instruction code[MAX_CODE_LENGTH];
 	int stack[MAX_STACK_HEIGHT];
 	int * pc, * bp, * sp, * ir;
+
+	initStack(stack);
 
 	pc = (int *) malloc(sizeof(int));
 	bp = (int *) malloc(sizeof(int));
@@ -35,7 +42,22 @@ int main(int argc, const char * argv[]) {
 
 	fetchCycle(code, stack, pc, bp, sp, ir);
 
+	free(pc);
+	free(bp);
+	free(sp);
+	free(ir);
+
 	return 0;
+}
+
+void initStack(int stack[]) {
+
+	int i;
+
+	for (i = 0; i < MAX_STACK_HEIGHT; i++)
+		stack[i] = 0;
+
+	return;
 }
 
 void readFile(const char * fileName, instruction code[]) {
@@ -65,31 +87,56 @@ void readFile(const char * fileName, instruction code[]) {
 void printCode(int size, instruction code[]) {
 
 	int i;
-	char * opCode = (char *) malloc(sizeof(char) * 3);
 
 	printf("PL/0 code:\n\n");
 
-	for (i = 0; i < size; i++)
-		if (getOp(code[i].op, code[i].m, opCode))
-			printf(" %2d  %3s    %d    %2d\n", i, opCode, code[i].l, code[i].m);
-		else
-			printf(" %2d  %3s         %2d\n", i, opCode, code[i].m);
+	for (i = 0; i < size; i++) {
+		printLine(code[i], i);
+		printf("\n");
+	}
 
 	return;
 }
 
-int getOp(int op, int m, char * opCode) {
+void printLine(instruction ir, int i) {
 
-	int printL = 0;
+	int * printL = (int *) malloc(sizeof(int));
+	int * printM = (int *) malloc(sizeof(int));
+	char * opCode = (char *) malloc(sizeof(char) * 3);
+
+	getOp(ir.op, ir.m, printL, printM, opCode);
+
+	if (*printL)
+		printf(" %2d  %3s   %2d   ", i, opCode, ir.l);
+	else
+		printf(" %2d  %3s        ", i, opCode);
+
+	if (*printM)
+		printf("%2d", ir.m);
+	else
+		printf("  ");
+
+	free(printL);
+	free(printM);
+	free(opCode);
+
+	return;
+}
+
+void getOp(int op, int m, int * printL, int * printM, char * opCode) {
+
+	*printL = 0;
+	*printM = 1;
 
 	switch(op) {
 		case 1:
 			strcpy(opCode, "LIT");
 			break;
-		case 2:
+		case 2: // OPR
 			switch(m) {
 				case 0:
 					strcpy(opCode, "RET");
+					*printM = 0;
 					break;
 				case 1:
 					strcpy(opCode, "NEG");
@@ -137,15 +184,15 @@ int getOp(int op, int m, char * opCode) {
 			break;
 		case 3:
 			strcpy(opCode, "LOD");
-			printL = 1;
+			*printL = 1;
 			break;
 		case 4:
 			strcpy(opCode, "STO");
-			printL = 1;
+			*printL = 1;
 			break;
 		case 5:
 			strcpy(opCode, "CAL");
-			printL = 1;
+			*printL = 1;
 			break;
 		case 6:
 			strcpy(opCode, "INC");
@@ -156,7 +203,7 @@ int getOp(int op, int m, char * opCode) {
 		case 8:
 			strcpy(opCode, "JPC");
 			break;
-		case 9:
+		case 9: // SIO
 			switch(m) {
 				case 0:
 					strcpy(opCode, "OUT");
@@ -166,6 +213,7 @@ int getOp(int op, int m, char * opCode) {
 					break;
 				case 2:
 					strcpy(opCode, "HLT");
+					*printM = 0;
 					break;
 				default:
 					strcpy(opCode, "ER");
@@ -177,33 +225,190 @@ int getOp(int op, int m, char * opCode) {
 			break;
 	}
 
-	return printL;
+	return;
 }
 
 void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir) {
+
+	int * halt;
+
+	halt = (int *) malloc(sizeof(int));
 
 	*pc = 0;
 	*bp = 1;
 	*sp = 0;
 	*ir = 0;
 
-	printf("\nExecution:\n");
-	printf("                       pc   bp   sp   stack\n");
-	printf("                        %d    %d    %d\n", *pc, *bp, *sp);
+	*halt = 0;
 
-	while (*pc < MAX_CODE_LENGTH) {
+	printf("\nExecution:\n");
+	printf("                      pc   bp   sp   stack\n");
+	printf("                      %2d   %2d   %2d\n", *pc, *bp, *sp);
+
+	while (*halt != 1 && *pc < MAX_CODE_LENGTH) {
 		*ir = *pc;
 		(*pc)++;
 		
-		executeCycle(code[*ir]);
+		executeCycle(code[*ir], stack, pc, bp, sp, halt);
+
+		printContents(code[*ir], *ir, *pc, *bp, *sp, stack);
+	}
+
+	free(halt);
+
+	return;
+}
+
+void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]) {
+
+	printLine(ir, i);
+	printf("    %2d   %2d   %2d   ", pc, bp, sp);
+	printStack(stack, sp, bp);
+	printf("\n");
+
+	return;
+}
+
+void printStack(int stack[], int sp, int bp) {
+
+	int i;
+
+	for (i = 0; i < sp; i++) {
+		if (bp - 1 == i && bp > 1)
+			printf("| ");
+
+		printf("%d ", stack[i]);
 	}
 
 	return;
 }
 
-void executeCycle(instruction ir) {
+void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt) {
 
-
+	switch(ir.op) {
+		case 1: // LIT
+			(*sp)++;
+			stack[*sp - 1] = ir.m;
+			break;
+		case 2: // OPR
+			switch(ir.m) {
+				case 0: // RET
+					*sp = *bp - 1;
+					*pc = stack[*sp + 3];
+					*bp = stack[*sp + 2];
+					break;
+				case 1: // NEG
+					stack[*sp - 1] = -stack[*sp - 1];
+					break;
+				case 2: // ADD
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] + stack[*sp];
+					break;
+				case 3: // SUB
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] - stack[*sp];
+					break;
+				case 4: // MUL
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] * stack[*sp];
+					break;
+				case 5: // DIV
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] / stack[*sp];
+					break;
+				case 6: // ODD
+					stack[*sp - 1] = stack[*sp - 1] % 2;
+					break;
+				case 7: // MOD
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] % stack[*sp];
+					break;
+				case 8: // EQL
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] == stack[*sp];
+					break;
+				case 9: // NEQ
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] != stack[*sp];
+					break;
+				case 10: // LSS
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] < stack[*sp];
+					break;
+				case 11: // LEQ
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] <= stack[*sp];
+					break;
+				case 12: // GTR
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] > stack[*sp];
+					break;
+				case 13: // GEQ
+					(*sp)--;
+					stack[*sp - 1] = stack[*sp - 1] >= stack[*sp];
+					break;
+				default:
+					break;
+			}
+			break;
+		case 3: // LOD
+			(*sp)++;
+			stack[*sp - 1] = stack[base(ir.l, *bp, stack) + ir.m];
+			break;
+		case 4: // STO
+			stack[base(ir.l, *bp, stack) + ir.m - 1] = stack[*sp - 1];
+			(*sp)--;
+			break;
+		case 5: // CAL
+			stack[*sp] = 0;
+			stack[*sp + 1] = base(ir.l, *bp, stack);
+			stack[*sp + 2] = *bp;
+			stack[*sp + 3] = *pc;
+			*bp = *sp + 1;
+			*pc = ir.m;
+			break;
+		case 6: // INC
+			*sp = *sp + ir.m;
+			break;
+		case 7: // JMP
+			*pc = ir.m;
+			break;
+		case 8: // JPC
+			if (stack[*sp - 1] == 0) {
+				*pc = ir.m;
+			}
+			(*sp)--;
+			break;
+		case 9: // SIO
+			switch(ir.m) {
+				case 0: // OUT
+					printStack(stack, *sp, *bp);
+					break;
+				case 1: // INP
+					(*sp)++;
+					printf("Input: ");
+					scanf("%d", &stack[*sp - 1]);
+					break;
+				case 2: // HLT
+						*halt = 1;
+					break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+	}
 
 	return;
+}
+
+int base(int level, int b, int stack[]) {
+
+	while (level > 0) {
+		b = stack[b + 1];
+		level--;
+	}
+
+	return b;
 }
