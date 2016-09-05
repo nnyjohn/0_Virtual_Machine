@@ -19,10 +19,10 @@ void printCode(int size, instruction code[]);
 void printLine(instruction ir, int i);
 void getOp(int op, int m, int * printL, int * printM, char * opCode);
 void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir);
-void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]);
-void printStack(int stack[], int sp, int bp);
 void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt);
 int base(int level, int b, int stack[]);
+void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]);
+void printStack(int stack[], int sp, int bp);
 
 int main(int argc, const char * argv[]) {
 	
@@ -73,6 +73,8 @@ void readFile(const char * fileName, instruction code[]) {
 	}
 
 	while(fscanf(ifp, "%d %d %d", &code[i].op, &code[i].l, &code[i].m) != EOF) {
+		if (code[i].l > MAX_LEXI_LEVELS)
+			code[i].l = MAX_LEXI_LEVELS;
 
 		i++;
 	}
@@ -259,30 +261,6 @@ void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, i
 	return;
 }
 
-void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]) {
-
-	printLine(ir, i);
-	printf("    %2d   %2d   %2d   ", pc, bp, sp);
-	printStack(stack, sp, bp);
-	printf("\n");
-
-	return;
-}
-
-void printStack(int stack[], int sp, int bp) {
-
-	int i;
-
-	for (i = 0; i < sp; i++) {
-		if (bp - 1 == i && bp > 1)
-			printf("| ");
-
-		printf("%d ", stack[i]);
-	}
-
-	return;
-}
-
 void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt) {
 
 	switch(ir.op) {
@@ -411,4 +389,28 @@ int base(int level, int b, int stack[]) {
 	}
 
 	return b;
+}
+
+void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]) {
+
+	printLine(ir, i);
+	printf("    %2d   %2d   %2d   ", pc, bp, sp);
+	printStack(stack, sp, bp);
+	printf("\n");
+
+	return;
+}
+
+void printStack(int stack[], int sp, int bp) {
+
+	int i;
+
+	for (i = 0; i < sp; i++) {
+		if (bp - 1 == i && bp > 1)
+			printf("| ");
+
+		printf("%d ", stack[i]);
+	}
+
+	return;
 }
