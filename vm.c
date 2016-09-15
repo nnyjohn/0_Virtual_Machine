@@ -27,14 +27,14 @@ typedef struct instruction
 } instruction;
 
 void initStack(int stack[]);
-void readFile(FILE * ifp, const char * fileName, instruction code[]);
+void readFile(const char * fileName, instruction code[]);
 void printCode(int size, instruction code[]);
 void printLine(instruction ir, int i);
 void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]);
 void printStack(int stack[], int sp, int bp);
 int base(int level, int b, int stack[]);
-void fetchCycle(FILE * ifp, instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir);
-void executeCycle(FILE * ifp, instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt);
+void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir);
+void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt);
 
 int main(int argc, const char * argv[]) {
 	
@@ -42,7 +42,6 @@ int main(int argc, const char * argv[]) {
 	instruction code[MAX_CODE_LENGTH];
 	int stack[MAX_STACK_HEIGHT];
 	int * pc, * bp, * sp, * ir;
-	FILE * ifp;
 
 	initStack(stack);
 
@@ -51,13 +50,9 @@ int main(int argc, const char * argv[]) {
 	sp = (int *) malloc(sizeof(int));
 	ir = (int *) malloc(sizeof(int));
 
-	ifp = fopen(fileName, "r");
+	readFile(fileName, code);
 
-	readFile(ifp, fileName, code);
-
-	fetchCycle(ifp, code, stack, pc, bp, sp, ir);
-
-	fclose(ifp);
+	fetchCycle(code, stack, pc, bp, sp, ir);
 
 	free(pc);
 	free(bp);
@@ -77,9 +72,12 @@ void initStack(int stack[]) {
 	return;
 }
 
-void readFile(FILE * ifp, const char * fileName, instruction code[]) {
+void readFile(const char * fileName, instruction code[]) {
 
+	FILE * ifp;
 	int i = 0, in;
+
+	ifp = fopen(fileName, "r");
 
 	if (ifp == NULL) {
 		printf("Error: File not found\n");
@@ -99,6 +97,8 @@ void readFile(FILE * ifp, const char * fileName, instruction code[]) {
 
 		i++;
 	}
+
+	fclose(ifp);
 
 	printCode(i, code);
 
@@ -187,7 +187,7 @@ int base(int level, int b, int stack[]) {
 	return b;
 }
 
-void fetchCycle(FILE * ifp, instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir) {
+void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir) {
 
 	int * halt;
 
@@ -210,7 +210,7 @@ void fetchCycle(FILE * ifp, instruction code[], int stack[], int * pc, int * bp,
 		
 		printLine(code[*ir], *ir);
 
-		executeCycle(ifp, code[*ir], stack, pc, bp, sp, halt);
+		executeCycle(code[*ir], stack, pc, bp, sp, halt);
 
 		printContents(code[*ir], *ir, *pc, *bp, *sp, stack);
 	}
@@ -220,7 +220,7 @@ void fetchCycle(FILE * ifp, instruction code[], int stack[], int * pc, int * bp,
 	return;
 }
 
-void executeCycle(FILE * ifp, instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt) {
+void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt) {
 
 	switch(ir.op) {
 		case 1: // LIT
@@ -323,7 +323,7 @@ void executeCycle(FILE * ifp, instruction ir, int stack[], int * pc, int * bp, i
 					break;
 				case 1: // INP
 					(*sp)++;
-					fscanf(ifp, "%d", &stack[*sp]);
+					scanf("%d", &stack[*sp]);
 					printf("read %d from input\n", stack[*sp]);
 					break;
 				case 2: // HLT
