@@ -1,11 +1,14 @@
+// Included libraries
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+// constants
 #define MAX_STACK_HEIGHT 2000
 #define MAX_CODE_LENGTH 500
 #define MAX_LEXI_LEVELS 3
 
+// arrays containing opcode information
 char * opCodes[] = { "Nil",
 	"LIT", "OPR", "LOD", "STO", "CAL",
 	"INC", "JMP", "JPC", "SIO"
@@ -19,6 +22,7 @@ char * SIO[] = {
 	"OUT", "INP", "HLT"
 };
 
+// instruction struct
 typedef struct instruction
 {
 	int op;
@@ -26,34 +30,42 @@ typedef struct instruction
 	int m;
 } instruction;
 
+// function prototypes
 void initStack(int stack[]);
 void readFile(const char * fileName, instruction code[]);
 void printCode(int size, instruction code[]);
-void printLine(instruction ir, int i);
+void printInstruction(instruction ir, int i);
 void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]);
 void printStack(int stack[], int sp, int bp);
 int base(int level, int b, int stack[]);
 void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, int * ir);
 void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int * halt);
 
+// main function
 int main(int argc, const char * argv[]) {
 	
+	// define program variables
 	const char * fileName = argv[1];
 	instruction code[MAX_CODE_LENGTH];
 	int stack[MAX_STACK_HEIGHT];
 	int * pc, * bp, * sp, * ir;
 
+	// initialize the stack
 	initStack(stack);
 
+	// initialize pc, bp, sp, and ir
 	pc = (int *) malloc(sizeof(int));
 	bp = (int *) malloc(sizeof(int));
 	sp = (int *) malloc(sizeof(int));
 	ir = (int *) malloc(sizeof(int));
 
+	// read in the provided file
 	readFile(fileName, code);
 
+	// execute code
 	fetchCycle(code, stack, pc, bp, sp, ir);
 
+	// free allocated memory
 	free(pc);
 	free(bp);
 	free(sp);
@@ -75,7 +87,7 @@ void initStack(int stack[]) {
 void readFile(const char * fileName, instruction code[]) {
 
 	FILE * ifp;
-	int i = 0, in;
+	int i = 0;
 
 	ifp = fopen(fileName, "r");
 
@@ -84,14 +96,7 @@ void readFile(const char * fileName, instruction code[]) {
 		exit(0);
 	}
 
-	//while(fscanf(ifp, "%d %d %d", &code[i].op, &code[i].l, &code[i].m) != EOF) {
-	while(fscanf(ifp, "%d", &in) != EOF) {
-		if (in == -1)
-			break;
-
-		code[i].op = in;
-		fscanf(ifp, "%d %d", &code[i].l, &code[i].m);
-
+	while(fscanf(ifp, "%d %d %d", &code[i].op, &code[i].l, &code[i].m) != EOF) {
 		if (code[i].l > MAX_LEXI_LEVELS)
 			code[i].l = MAX_LEXI_LEVELS;
 
@@ -112,14 +117,14 @@ void printCode(int size, instruction code[]) {
 	printf("PL/0 code:\n\n");
 
 	for (i = 0; i < size; i++) {
-		printLine(code[i], i);
+		printInstruction(code[i], i);
 		printf("\n");
 	}
 
 	return;
 }
 
-void printLine(instruction ir, int i) {
+void printInstruction(instruction ir, int i) {
 
 	char * opCode;
 	int printL, printM;
@@ -208,7 +213,7 @@ void fetchCycle(instruction code[], int stack[], int * pc, int * bp, int * sp, i
 		*ir = *pc;
 		(*pc)++;
 		
-		printLine(code[*ir], *ir);
+		printInstruction(code[*ir], *ir);
 
 		executeCycle(code[*ir], stack, pc, bp, sp, halt);
 
