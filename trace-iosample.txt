@@ -12,5 +12,5 @@ Execution:
    1    1    1   2 
   1  ODD               2    1    1   0 
   2  OUT             0
-   3    1    1   0 
-  3  HLT               4    1    1   0 
+   3    1    0   
+  3  HLT               4    1    0   
