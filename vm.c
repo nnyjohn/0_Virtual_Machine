@@ -325,6 +325,7 @@ void executeCycle(instruction ir, int stack[], int * pc, int * bp, int * sp, int
 			switch(ir.m) {
 				case 0: // OUT
 					printf("%2d\n", stack[*sp]);
+					(*sp)--;
 					break;
 				case 1: // INP
 					(*sp)++;
