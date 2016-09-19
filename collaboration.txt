@@ -4,3 +4,7 @@
 // Remington Howell
 // Johnathan Sattler
 // John Herold
+
+Johnathan Sattler
+Wrote the main function and the executeCycle function
+
