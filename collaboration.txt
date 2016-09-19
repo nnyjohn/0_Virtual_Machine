@@ -5,6 +5,13 @@
 // Johnathan Sattler
 // John Herold
 
+Lester Young
+
+Timothy Konzil
+
+Remington Howell
+
 Johnathan Sattler
 Wrote the main function and the executeCycle function
 
+John Herold
