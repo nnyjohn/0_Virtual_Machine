@@ -6,6 +6,7 @@
 // John Herold
 
 Lester Young
+Worked on the readFile and printInstruction function
 
 Timothy Konzil
 
