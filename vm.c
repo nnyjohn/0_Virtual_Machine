@@ -90,28 +90,33 @@ void initStack(int stack[]) {
 
 	return;
 }
-
+// void function to read in file 
 void readFile(const char * fileName, instruction code[]) {
 
 	FILE * ifp;
 	int i = 0;
-
+	
+//opens file
 	ifp = fopen(fileName, "r");
 
+// if there is no file, execute print statement and exits function
 	if (ifp == NULL) {
 		printf("Error: File not found\n");
 		exit(0);
 	}
 
+// reads in file contents and places them in the instruction struct
 	while(fscanf(ifp, "%d %d %d", &code[i].op, &code[i].l, &code[i].m) != EOF) {
 		if (code[i].l > MAX_LEXI_LEVELS)
 			code[i].l = MAX_LEXI_LEVELS;
-
+			
 		i++;
 	}
-
+	
+// closes file
 	fclose(ifp);
-
+	
+// calls printCode function
 	printCode(i, code);
 
 	return;
@@ -131,6 +136,7 @@ void printCode(int size, instruction code[]) {
 	return;
 }
 
+// void function to prin instruction struct
 void printInstruction(instruction ir, int i) {
 
 	char * opCode;
@@ -139,6 +145,8 @@ void printInstruction(instruction ir, int i) {
 	printL = 0;
 	printM = 0;
 
+// assigns the char variable opCode, the int variable printL and printM depending on the passed thru struct
+// uses the contents of the declared arrays OPR[], SIO[] and opCodes[]
 	if (ir.op == 2)
 		opCode = OPR[ir.m];
 	else if (ir.op == 9)
@@ -151,13 +159,16 @@ void printInstruction(instruction ir, int i) {
 	if (ir.op >= 3 && ir.op <= 5)
 		printL = 1;
 
+// prints out variable i and opCode. i being the step number and opCode the operation
 	printf(" %2d  %3s  ", i, opCode);
 
+// prints out level if assigned
 	if (printL)
 		printf("%3d ", ir.l);
 	else
 		printf("    ");
 
+// prints out modifier if assigned
 	if (printM)
 		printf("%3d   ", ir.m);
 	else
