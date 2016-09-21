@@ -11,6 +11,7 @@ Worked on the readFile and printInstruction function
 Timothy Konzil
 
 Remington Howell
+Wrote printStack and base functions
 
 Johnathan Sattler
 Wrote the main function and the executeCycle function
