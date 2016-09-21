@@ -190,10 +190,14 @@ void printStack(int stack[], int sp, int bp) {
 
 	int i;
 
+	//loop through the code
 	for (i = 1; i <= sp; i++) {
+		
+		// add a spacing line where necessary
 		if (bp == i && bp > 1)
 			printf("| ");
 
+		//print the stack
 		printf("%d ", stack[i]);
 	}
 
@@ -202,6 +206,7 @@ void printStack(int stack[], int sp, int bp) {
 
 int base(int level, int b, int stack[]) {
 
+	//add the values in the stack to b
 	while (level > 0) {
 		b = stack[b + 1];
 		level--;
