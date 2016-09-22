@@ -9,6 +9,7 @@ Lester Young
 Worked on the readFile and printInstruction function
 
 Timothy Konzil
+Wrote the printContents function and the base function
 
 Remington Howell
 Wrote printStack and base functions

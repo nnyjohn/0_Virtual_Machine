@@ -90,22 +90,23 @@ void initStack(int stack[]) {
 
 	return;
 }
+
 // void function to read in file 
 void readFile(const char * fileName, instruction code[]) {
 
 	FILE * ifp;
 	int i = 0;
 	
-//opens file
+	// opens file
 	ifp = fopen(fileName, "r");
 
-// if there is no file, execute print statement and exits function
+	// if there is no file, execute print statement and exits function
 	if (ifp == NULL) {
 		printf("Error: File not found\n");
 		exit(0);
 	}
 
-// reads in file contents and places them in the instruction struct
+	// reads in file contents and places them in the instruction struct
 	while(fscanf(ifp, "%d %d %d", &code[i].op, &code[i].l, &code[i].m) != EOF) {
 		if (code[i].l > MAX_LEXI_LEVELS)
 			code[i].l = MAX_LEXI_LEVELS;
@@ -113,10 +114,10 @@ void readFile(const char * fileName, instruction code[]) {
 		i++;
 	}
 	
-// closes file
+	// closes file
 	fclose(ifp);
 	
-// calls printCode function
+	// calls printCode function
 	printCode(i, code);
 
 	return;
@@ -145,8 +146,8 @@ void printInstruction(instruction ir, int i) {
 	printL = 0;
 	printM = 0;
 
-// assigns the char variable opCode, the int variable printL and printM depending on the passed thru struct
-// uses the contents of the declared arrays OPR[], SIO[] and opCodes[]
+	// assigns the char variable opCode, the int variable printL and printM depending on the passed thru struct
+	// uses the contents of the declared arrays OPR[], SIO[] and opCodes[]
 	if (ir.op == 2)
 		opCode = OPR[ir.m];
 	else if (ir.op == 9)
@@ -159,16 +160,16 @@ void printInstruction(instruction ir, int i) {
 	if (ir.op >= 3 && ir.op <= 5)
 		printL = 1;
 
-// prints out variable i and opCode. i being the step number and opCode the operation
+	// prints out variable i and opCode. i being the step number and opCode the operation
 	printf(" %2d  %3s  ", i, opCode);
 
-// prints out level if assigned
+	// prints out level if assigned
 	if (printL)
 		printf("%3d ", ir.l);
 	else
 		printf("    ");
 
-// prints out modifier if assigned
+	// prints out modifier if assigned
 	if (printM)
 		printf("%3d   ", ir.m);
 	else
@@ -179,8 +180,9 @@ void printInstruction(instruction ir, int i) {
 
 void printContents(instruction ir, int i, int pc, int bp, int sp, int stack[]) {
 
+	// print program counter, base pointer, and stack pointer
 	printf("%4d %4d %4d   ", pc, bp, sp);
-	printStack(stack, sp, bp);
+	printStack(stack, sp, bp); // prints stack
 	printf("\n");
 
 	return;
@@ -206,7 +208,7 @@ void printStack(int stack[], int sp, int bp) {
 
 int base(int level, int b, int stack[]) {
 
-	//add the values in the stack to b
+	// return base of activation record at given level
 	while (level > 0) {
 		b = stack[b + 1];
 		level--;
