@@ -18,3 +18,4 @@ Johnathan Sattler
 Wrote the main function and the executeCycle function
 
 John Herold
+Wrote initStack function and printCode function
